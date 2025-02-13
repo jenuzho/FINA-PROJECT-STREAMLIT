@@ -3,53 +3,90 @@ import joblib
 import gzip
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 
-# Cargar el modelo
-MODEL_PATH = "modelo_RandomForest_optimizado.pkl.gz"
-SCALER_PATH = "scaler.pkl.gz"  # Archivo con el scaler usado en el preprocesamiento
+# 🚀 **Configuración inicial de la app**
+st.set_page_config(page_title="Detección de Fraude Bancario", page_icon="💰", layout="wide")
 
+# 📌 **Diccionario de Perfiles de Cliente**
+perfiles_clientes = {
+    "Cliente Nuevo": {
+        "income": 3000, "name_email_similarity": 0.3, "customer_age": 25,
+        "proposed_credit_limit": 5000, "velocity_6h": 200
+    },
+    "Cliente Recurrente": {
+        "income": 7000, "name_email_similarity": 0.6, "customer_age": 40,
+        "proposed_credit_limit": 15000, "velocity_6h": 400
+    },
+    "Cliente VIP": {
+        "income": 20000, "name_email_similarity": 0.9, "customer_age": 55,
+        "proposed_credit_limit": 50000, "velocity_6h": 800
+    }
+}
+
+# 📌 **Media y Desviación Estándar para Escalar Variables**
+scaler_means = {"income": 5000, "name_email_similarity": 0.5, "customer_age": 35, 
+                "proposed_credit_limit": 10000, "velocity_6h": 500}
+scaler_stds = {"income": 2000, "name_email_similarity": 0.2, "customer_age": 10, 
+               "proposed_credit_limit": 5000, "velocity_6h": 1000}
+
+# 📌 **Función para escalar la entrada**
+def scale_input(data):
+    for feature in data.columns:
+        if feature in scaler_means:
+            data[feature] = (data[feature] - scaler_means[feature]) / scaler_stds[feature]
+    return data
+
+# 📌 **Función para cargar el modelo**
 def cargar_modelo(ruta):
     with gzip.open(ruta, "rb") as f:
-        return joblib.load(f)
+        modelo = joblib.load(f)
+    return modelo
 
-def cargar_scaler(ruta):
-    with gzip.open(ruta, "rb") as f:
-        return joblib.load(f)
-
-# Cargar modelo y scaler
-modelo = cargar_modelo(MODEL_PATH)
-scaler = cargar_scaler(SCALER_PATH)
-
-# Verificar si el modelo cargado es un RandomForestClassifier
-if modelo is None:
-    st.error("No se pudo cargar el modelo.")
+# 🔥 **Cargar el modelo de detección de fraude**
+MODEL_PATH = "modelo_RandomForest_optimizado.pkl.gz"
+try:
+    model = cargar_modelo(MODEL_PATH)
+    st.success("✅ Modelo cargado correctamente.")
+except Exception as e:
+    st.error(f"Error al cargar el modelo: {str(e)}")
     st.stop()
 
-# Título
-st.title("🔍 Predicción de Fraude Bancario")
+# 📌 **Interfaz en Streamlit**
+st.sidebar.title("📌 Configuración de Cliente")
+perfil_seleccionado = st.sidebar.selectbox("Selecciona un perfil", list(perfiles_clientes.keys()))
 
-# 📌 Ajuste de parámetros
-st.header("📊 Ajuste de Parámetros")
+# 📌 **Mostrar inputs con valores predefinidos según perfil**
+st.title("🔍 Introducir Datos de Transacción")
+st.subheader("Ajuste de Parámetros")
 
-# Ingreso con valores realistas
-income = st.slider("Ingresos ($)", min_value=500, max_value=100000, value=5000, step=100)
+# Obtener valores del perfil seleccionado
+perfil = perfiles_clientes[perfil_seleccionado]
 
-# Otros inputs (solo ejemplos)
-name_email_similarity = st.slider("Similitud Nombre-Email", 0.0, 1.0, 0.5, step=0.01)
-customer_age = st.slider("Edad del Cliente", 18, 90, 30)
-proposed_credit_limit = st.slider("Límite de Crédito Propuesto ($)", 500, 50000, 10000, step=500)
-velocity_6h = st.slider("Velocidad de Transacción (6h)", 10, 10000, 100, step=50)
+# **Inputs con valores precargados del perfil**
+income = st.number_input("Ingresos", min_value=0.0, max_value=50000.0, value=perfil["income"], step=500.0)
+name_email_similarity = st.slider("Similitud Nombre-Email", 0.0, 1.0, perfil["name_email_similarity"], step=0.01)
+customer_age = st.number_input("Edad del Cliente", min_value=18, max_value=100, value=perfil["customer_age"], step=1)
+proposed_credit_limit = st.number_input("Límite de Crédito Propuesto", min_value=0.0, max_value=100000.0, 
+                                        value=perfil["proposed_credit_limit"], step=500.0)
+velocity_6h = st.number_input("Velocidad de Transacción (6h)", min_value=0.0, max_value=10000.0, 
+                              value=perfil["velocity_6h"], step=50.0)
 
-# Crear DataFrame con los valores originales
-data_df = pd.DataFrame([[income, name_email_similarity, customer_age, proposed_credit_limit, velocity_6h]], 
-                        columns=["income", "name_email_similarity", "customer_age", "proposed_credit_limit", "velocity_6h"])
-
-# Aplicar la transformación de escalado antes de predecir
-data_scaled = scaler.transform(data_df)
-
-# Botón para predecir
+# 📌 **Predicción**
 if st.button("🚀 Predecir Fraude"):
-    prediction = modelo.predict(data_scaled)[0]
-    resultado = "❌ Fraude" if prediction == 1 else "✅ No Fraude"
-    st.success(f"🔮 Predicción: {resultado}")
+    # Crear DataFrame con los datos del usuario
+    data_df = pd.DataFrame([[income, name_email_similarity, customer_age, 
+                              proposed_credit_limit, velocity_6h]], 
+                           columns=["income", "name_email_similarity", "customer_age", 
+                                    "proposed_credit_limit", "velocity_6h"])
+
+    # Escalar los datos
+    data_scaled = scale_input(data_df)
+
+    # Realizar la predicción
+    try:
+        prediction = model.predict(data_scaled)[0]
+        resultado = "Fraude" if prediction == 1 else "No Fraude"
+        st.success(f"🔮 **Predicción:** {resultado}")
+    except Exception as e:
+        st.error(f"Error en la predicción: {str(e)}")
