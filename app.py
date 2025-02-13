@@ -19,7 +19,26 @@ def cargar_modelo_comprimido(ruta):
 # Cargar el modelo
 try:
     model = cargar_modelo_comprimido(RUTA_MODELO)
-    st.success("✅ Modelo cargado correctamente.")
+    st.markdown(
+        """
+        <div style="
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #808080;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+            width: auto;
+        ">
+            Modelo cargado correctamente.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 except Exception as e:
     st.error(f"Error al cargar el modelo: {str(e)}")
     st.stop()
