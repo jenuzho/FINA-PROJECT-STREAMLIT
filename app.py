@@ -29,6 +29,9 @@ if not isinstance(model, RandomForestClassifier):
     st.error("El archivo cargado no es un modelo RandomForest.")
     st.stop()
 
+# Obtener los nombres de las características esperadas por el modelo
+expected_features = model.feature_names_in_
+
 # Definir perfiles de clientes
 perfiles = {
     "Cliente Nuevo y Desconocido": {
@@ -67,6 +70,9 @@ input_data = pd.DataFrame([{
     "income": income, "name_email_similarity": name_email_similarity, "customer_age": customer_age,
     "velocity_6h": velocity_6h, "credit_risk_score": credit_risk_score, "proposed_credit_limit": proposed_credit_limit
 }])
+
+# Asegurar que las columnas coincidan con las esperadas por el modelo
+input_data = input_data.reindex(columns=expected_features, fill_value=0)
 
 # Predicción automática en Modo Automático
 if modo == "Modo Automático":
