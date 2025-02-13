@@ -42,32 +42,6 @@ perfiles = {
             "proposed_credit_limit": 5000, "foreign_request": 1, "keep_alive_session": 10,
             "device_distinct_emails_8w": 5, "month": 2
         }
-    },
-    "Cliente Recurrente y Estable": {
-        "explicacion": "Este cliente ha estado utilizando la plataforma durante un largo período, "
-                       "tiene un historial financiero estable y confiable. Representa un menor riesgo de fraude.",
-        "datos": {
-            "income": 0.7, "name_email_similarity": 0.5, "prev_address_months_count": 20,
-            "current_address_months_count": 50, "customer_age": 40, "intended_balcon_amount": 20000.0,
-            "velocity_6h": 200, "velocity_24h": 800, "bank_branch_count_8w": 5,
-            "date_of_birth_distinct_emails_4w": 2, "credit_risk_score": 700, "email_is_free": 0,
-            "phone_home_valid": 1, "phone_mobile_valid": 1, "has_other_cards": 1,
-            "proposed_credit_limit": 20000, "foreign_request": 0, "keep_alive_session": 120,
-            "device_distinct_emails_8w": 1, "month": 6
-        }
-    },
-    "Cliente Corporativo": {
-        "explicacion": "Este cliente representa una empresa con altos volúmenes de transacciones. "
-                       "Usualmente tiene una relación sólida con el banco y un historial de crédito robusto.",
-        "datos": {
-            "income": 1.0, "name_email_similarity": 0.2, "prev_address_months_count": 100,
-            "current_address_months_count": 120, "customer_age": 50, "intended_balcon_amount": 500000.0,
-            "velocity_6h": 5000, "velocity_24h": 20000, "bank_branch_count_8w": 10,
-            "date_of_birth_distinct_emails_4w": 1, "credit_risk_score": 900, "email_is_free": 0,
-            "phone_home_valid": 1, "phone_mobile_valid": 1, "has_other_cards": 1,
-            "proposed_credit_limit": 100000, "foreign_request": 0, "keep_alive_session": 300,
-            "device_distinct_emails_8w": 0, "month": 12
-        }
     }
 }
 
@@ -77,8 +51,24 @@ st.title("🔍 Predicción de Fraude Financiero")
 # Selección del perfil
 perfil_seleccionado = st.selectbox("Seleccione un perfil de cliente", list(perfiles.keys()))
 
-# Mostrar la explicación del perfil
-st.markdown(f"**ℹ️ Sobre este perfil:** {perfiles[perfil_seleccionado]['explicacion']}")
+# Mejor presentación de la descripción del perfil sin icono y con buen espaciado
+st.markdown(
+    f"""
+    <div style="
+        background-color: #2b2b2b;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: white;
+        margin-bottom: 15px;
+    ">
+        <strong>Sobre este perfil:</strong> <br>
+        {perfiles[perfil_seleccionado]['explicacion']}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Cargar los valores del perfil seleccionado
 data = perfiles[perfil_seleccionado]["datos"]
